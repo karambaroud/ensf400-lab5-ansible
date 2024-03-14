@@ -1,5 +1,5 @@
 - name: Play - Install and configure Nginx as a LoadBalancer
-  hosts: localhost
+  hosts: loadbalancer
   become: yes
   tasks:
     - name: Update cache
