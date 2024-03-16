@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+# File Name: load_inventory.py
+# Assignment: 2
+# Completed by: Karam Baroud
+# Submission Date: March 16, 2024
+
+
 import ansible_runner
 import re
 

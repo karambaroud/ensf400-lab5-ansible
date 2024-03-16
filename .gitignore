@@ -1,3 +1,7 @@
 id_rsa*
 
 runner
+
+artifacts
+
+env
