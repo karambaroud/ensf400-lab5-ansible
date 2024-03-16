@@ -1,15 +1,45 @@
+#! /usr/bin/env python3
 import ansible_runner
-import json
+import re
 
-inventoryJSON = ansible_runner.get_inventory("list", ["./hosts.yml"], quiet=True)
+# Call the get_inventory function to get inventory name and group
+inv_response, error = ansible_runner.interface.get_inventory(
+    action='list',
+    inventories=['./hosts.yml'],
+    response_format='json',
+    quiet=True
+)
 
-inventory = json.loads(inventoryJSON[0])
+ip_response, error, code = ansible_runner.interface.run_command("ansible-playbook", [
+        "-i", "./hosts.yml",
+        "--private-key", "./secrets/id_rsa", 
+        "./find_ip_playbook.yml"
+    ],
+    quiet=True
+)
 
-for host in inventory["app_group"]["hosts"]:
-    # print(hosts)
-    print("\nHost name: " + host)
-    print("IP address: " + inventory["_meta"]["hostvars"][host]["ansible_host"])
-    print("Group: app_group")
+if code != 0:
+    print("Error running the playbook")
+    print(error)
+    exit(1)
 
-ansible_runner.interface.run_command("ansible", ["-i", "./hosts.yml", "all", "-m", "ping"])
+# isolate the IP addresses from the response using regex
+    # seem to always be in correct order
+ip_regex = r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+ip_addresses = re.findall(ip_regex, ip_response)
 
+# Print host content
+i = 0
+for host in inv_response["_meta"]["hostvars"]:
+    print(f"Host: {host}")
+    print(f"IP: {ip_addresses[i]}")
+    print(f"Group: {'loadbalancer' if host == 'localhost' else 'app_group'}")
+    print()
+    i += 1
+
+ansible_runner.interface.run_command("ansible", [
+    "-i", "./hosts.yml",
+    "--private-key", "./secrets/id_rsa",
+    "all:localhost",
+    "-m", "ping"
+])
